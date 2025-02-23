@@ -1,6 +1,6 @@
 {
-  "homepage": "https://AshAster.github.io/genshin-website",
-  "name": "web",
+  "name": "genshin",
+  "homepage": "https://ashaster.github.io/genshin-website/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
