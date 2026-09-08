@@ -1,94 +1,100 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Button from './Button';
-import { TiLocationArrow } from 'react-icons/ti';
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/all';
+import { useState, useRef, useEffect, useCallback } from "react";
+import Button from "./Button";
+import Video from "./Video";
+import { TiLocationArrow } from "react-icons/ti";
+import { asset, officialSiteUrl } from "../config";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, useGSAP);
+
+const TOTAL_VIDEOS = 4;
+const getVideoSrc = (index) => asset(`videos/hero-${index}`);
 
 export const Hero = () => {
   const [currentIndex, setCurrentIndex] = useState(1);
   const [hasClicked, setHasClicked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadedVideos, setLoadedVideos] = useState(0);
 
-  const totalVideos = 4;
   const nextVideoRef = useRef(null);
+  const previewVideoRef = useRef(null);
+  const containerRef = useRef(null);
 
-  const handleVideoLoad = () => {
-    setLoadedVideos((prev) => prev + 1);
-  };
-  
+  const upcomingVideoIndex = (currentIndex % TOTAL_VIDEOS) + 1;
+
+  // The background clip gates the loader. A timeout and an error handler both
+  // release it so a slow or missing file can never leave the spinner stuck.
+  const stopLoading = useCallback(() => setIsLoading(false), []);
+
   useEffect(() => {
-    if (loadedVideos === totalVideos - 1) {
-      setIsLoading(false);
-    }
-  }, [loadedVideos]);
+    const timeout = setTimeout(stopLoading, 4000);
+    return () => clearTimeout(timeout);
+  }, [stopLoading]);
 
-  const upcomingVideoIndex = (currentIndex % totalVideos) + 1;
-
-  const handelMiniVideoClick = () => {
+  const handleMiniVideoClick = () => {
     setHasClicked(true);
     setCurrentIndex(upcomingVideoIndex);
   };
 
-
+  // Expand the queued clip over the current one when the mini preview is clicked.
   useGSAP(
     () => {
-      if (hasClicked) {
-        gsap.set("#next-video", { visibility: "visible" });
-        gsap.to("#next-video", {
-          transformOrigin: "center center",
-          scale: 1,
-          width: "100%",
-          height: "100%",
-          duration: 1,
-          ease: "power1.inOut",
-          onStart: () => nextVideoRef.current.play(),
-        });
-        gsap.from("#current-video", {
-          transformOrigin: "center center",
-          scale: 0,
-          duration: 1.5,
-          ease: "power1.inOut",
-        });
-      }
+      if (!hasClicked) return;
+
+      gsap.set("#next-video", { visibility: "visible" });
+      gsap.to("#next-video", {
+        transformOrigin: "center center",
+        scale: 1,
+        width: "100%",
+        height: "100%",
+        duration: 1,
+        ease: "power1.inOut",
+        onStart: () => {
+          // Autoplay can be rejected (low power mode, no user gesture yet).
+          nextVideoRef.current?.play?.().catch(() => {});
+        },
+      });
+      gsap.from("#current-video", {
+        transformOrigin: "center center",
+        scale: 0,
+        duration: 1.5,
+        ease: "power1.inOut",
+      });
     },
-    {
-      dependencies: [currentIndex],
-      revertOnUpdate: true,
-    }
+    { scope: containerRef, dependencies: [currentIndex], revertOnUpdate: true }
   );
 
-  useGSAP(() => {
-    gsap.set("#video-frame", {
-      clipPath: "polygon(14% 0, 72% 0, 88% 90%, 0 95%)",
-      borderRadius: "0% 0% 40% 10%",
-    });
-    gsap.from("#video-frame", {
-      clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-      borderRadius: "0% 0% 0% 0%",
-      ease: "power1.inOut",
-      scrollTrigger: {
-        trigger: "#video-frame",
-        start: "center center",
-        end: "bottom center",
-        scrub: true,
-      },
-    });
-  });
-
-  const getVideoSrc = (index) => `videos/hero-${index}.mp4`;
+  // Pinch the video frame into a rhombus as the page scrolls past it.
+  useGSAP(
+    () => {
+      gsap.set("#video-frame", {
+        clipPath: "polygon(14% 0, 72% 0, 88% 90%, 0 95%)",
+        borderRadius: "0% 0% 40% 10%",
+      });
+      gsap.from("#video-frame", {
+        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+        borderRadius: "0% 0% 0% 0%",
+        ease: "power1.inOut",
+        scrollTrigger: {
+          trigger: "#video-frame",
+          start: "center center",
+          end: "bottom center",
+          scrub: true,
+        },
+      });
+    },
+    { scope: containerRef }
+  );
 
   return (
-    <div className="relative h-dvh w-screen overflow-x-hidden">
+    <div id="hero" ref={containerRef} className="relative h-dvh w-screen overflow-x-hidden">
       {isLoading && (
         <div className="flex-center absolute z-[100] h-dvh w-screen overflow-hidden bg-violet-50">
           <div className="three-body">
-            <div className="three-body__dot"></div>
-            <div className="three-body__dot"></div>
-            <div className="three-body__dot"></div>
+            <div className="three-body__dot" />
+            <div className="three-body__dot" />
+            <div className="three-body__dot" />
           </div>
         </div>
       )}
@@ -97,43 +103,52 @@ export const Hero = () => {
         id="video-frame"
         className="relative z-10 h-dvh w-screen overflow-hidden rounded-lg bg-blue-75"
       >
-        <div>
-          <div className="mask-clip-path absolute-center absolute z-50 size-64 cursor-pointer overflow-hidden rounded-lg">
-            <div
-              onClick={handelMiniVideoClick}
-              className="origin-center transition-all duration-500 ease-in scale-50 opacity-0 hover:scale-100 hover:opacity-100"
-            >
-              <video
-                ref={nextVideoRef}
-                src={getVideoSrc(upcomingVideoIndex)}
-                loop
-                muted
-                id="current-video"
-                className="size-64 origin-center scale-150 object-cover object-center"
-                onLoadedData={handleVideoLoad}
-              />
-            </div>
+        {/* Hover-to-reveal preview of the next clip */}
+        <div className="hero-mini-frame absolute-center absolute z-50 size-64 cursor-pointer overflow-hidden rounded-lg">
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Play the next hero clip"
+            onClick={handleMiniVideoClick}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleMiniVideoClick();
+              }
+            }}
+            className="origin-center scale-50 opacity-0 transition-all duration-500 ease-in hover:scale-100 hover:opacity-100 focus-visible:scale-100 focus-visible:opacity-100 focus-visible:outline-none"
+          >
+            <Video
+              key={`preview-${upcomingVideoIndex}`}
+              ref={previewVideoRef}
+              src={getVideoSrc(upcomingVideoIndex)}
+              autoPlay
+              preload="metadata"
+              id="current-video"
+              className="size-64 origin-center scale-150 object-cover object-center"
+            />
           </div>
-
-          <video
-            ref={nextVideoRef}
-            src={getVideoSrc(currentIndex)}
-            loop
-            muted
-            id="next-video"
-            className="absolute-center invisible absolute z-20 size-64 object-cover object-center"
-            onLoadedData={handleVideoLoad}
-          />
-
-          <video
-            src={getVideoSrc(currentIndex === totalVideos - 1 ? 1 : currentIndex)}
-            autoPlay
-            loop
-            muted
-            className="absolute left-0 top-0 size-full object-cover object-center"
-            onLoadedData={handleVideoLoad}
-          />
         </div>
+
+        {/* The clip that scales up to fill the frame after a click */}
+        <Video
+          key={`next-${currentIndex}`}
+          ref={nextVideoRef}
+          src={getVideoSrc(currentIndex)}
+          preload="metadata"
+          id="next-video"
+          className="absolute-center invisible absolute z-20 size-64 object-cover object-center"
+        />
+
+        {/* Background clip */}
+        <Video
+          key={`bg-${currentIndex}`}
+          src={getVideoSrc(currentIndex)}
+          autoPlay
+          className="absolute left-0 top-0 size-full object-cover object-center"
+          onLoadedData={stopLoading}
+          onError={stopLoading}
+        />
 
         <h1 className="special-font hero-heading absolute bottom-5 right-5 z-40 text-blue-75">
           G<b>a</b>ming
@@ -151,6 +166,7 @@ export const Hero = () => {
             <Button
               id="watch-trailer"
               title="Watch trailer"
+              href={officialSiteUrl}
               leftIcon={<TiLocationArrow />}
               containerClass="bg-yellow-300 flex-center gap-1"
             />
@@ -164,3 +180,5 @@ export const Hero = () => {
     </div>
   );
 };
+
+export default Hero;

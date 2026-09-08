@@ -7,14 +7,14 @@ export default {
   theme: {
     extend: {
       fontFamily:{
-        'zentry':['zentry', 'sanf-serif'],
-        'genshin': ['genshin', 'sanf-serif'],
-        'general':['general', 'sanf-serif'],
-        'ja-jp':['ja-jp', 'sanf-serif'],
-        'robert-medium':['robert-medium', 'sanf-serif'],
-        'circular-web':['circular-web', 'sanf-serif'],
-        'robert-regular':['robert-regular', 'sanf-serif'],
-        'zh-cn': ['zh-cn', 'sanf-serif'],
+        'zentry':['zentry', 'sans-serif'],
+        'genshin': ['genshin', 'sans-serif'],
+        'general':['general', 'sans-serif'],
+        'ja-jp':['ja-jp', 'sans-serif'],
+        'robert-medium':['robert-medium', 'sans-serif'],
+        'circular-web':['circular-web', 'sans-serif'],
+        'robert-regular':['robert-regular', 'sans-serif'],
+        'zh-cn': ['zh-cn', 'sans-serif'],
       },
       colors: {
         blue: {

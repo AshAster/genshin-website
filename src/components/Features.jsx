@@ -1,5 +1,36 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { TiLocationArrow } from "react-icons/ti";
+import Video from "./Video";
+import { asset } from "../config";
+
+/**
+ * Only plays a clip while it is on screen. Six autoplaying background videos
+ * otherwise decode in parallel for the entire page life and stall scrolling.
+ */
+const useInViewPlayback = () => {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
+  return videoRef;
+};
 
 export const BentoTilt = ({ children, className = "" }) => {
   const [transformStyle, setTransformStyle] = useState("");
@@ -8,22 +39,19 @@ export const BentoTilt = ({ children, className = "" }) => {
   const handleMouseMove = (event) => {
     if (!itemRef.current) return;
 
-    const { left, top, width, height } =
-      itemRef.current.getBoundingClientRect();
-
+    const { left, top, width, height } = itemRef.current.getBoundingClientRect();
     const relativeX = (event.clientX - left) / width;
     const relativeY = (event.clientY - top) / height;
 
     const tiltX = (relativeY - 0.5) * 5;
     const tiltY = (relativeX - 0.5) * -5;
 
-    const newTransform = `perspective(700px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(.95, .95, .95)`;
-    setTransformStyle(newTransform);
+    setTransformStyle(
+      `perspective(700px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(.95, .95, .95)`
+    );
   };
 
-  const handleMouseLeave = () => {
-    setTransformStyle("");
-  };
+  const handleMouseLeave = () => setTransformStyle("");
 
   return (
     <div
@@ -31,7 +59,7 @@ export const BentoTilt = ({ children, className = "" }) => {
       className={className}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{ transform: transformStyle }}
+      style={{ transform: transformStyle, willChange: "transform" }}
     >
       {children}
     </div>
@@ -42,32 +70,28 @@ export const BentoCard = ({ src, title, description, isComingSoon }) => {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [hoverOpacity, setHoverOpacity] = useState(0);
   const hoverButtonRef = useRef(null);
+  const videoRef = useInViewPlayback();
 
   const handleMouseMove = (event) => {
     if (!hoverButtonRef.current) return;
     const rect = hoverButtonRef.current.getBoundingClientRect();
-
     setCursorPosition({
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
     });
   };
 
-  const handleMouseEnter = () => setHoverOpacity(1);
-  const handleMouseLeave = () => setHoverOpacity(0);
-
   return (
     <div className="relative size-full">
-      <video
+      <Video
+        ref={videoRef}
         src={src}
-        loop
-        muted
-        autoPlay
+        preload="none"
         className="absolute left-0 top-0 size-full object-cover object-center"
       />
       <div className="relative z-10 flex size-full flex-col justify-between p-5 text-blue-50">
         <div>
-          <h1 className="bento-title special-font">{title}</h1>
+          <h2 className="bento-title special-font">{title}</h2>
           {description && (
             <p className="mt-3 max-w-64 text-xs md:text-base">{description}</p>
           )}
@@ -77,13 +101,13 @@ export const BentoCard = ({ src, title, description, isComingSoon }) => {
           <div
             ref={hoverButtonRef}
             onMouseMove={handleMouseMove}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
+            onMouseEnter={() => setHoverOpacity(1)}
+            onMouseLeave={() => setHoverOpacity(0)}
             className="border-hsla relative flex w-fit cursor-pointer items-center gap-1 overflow-hidden rounded-full bg-transparent px-5 py-2 text-xs uppercase text-white/20"
           >
-            {/* Radial gradient hover effect */}
+            {/* Radial gradient that tracks the cursor */}
             <div
-              className="pointer-events-none absolute -inset-px opacity-0 transition duration-300"
+              className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300"
               style={{
                 opacity: hoverOpacity,
                 background: `radial-gradient(100px circle at ${cursorPosition.x}px ${cursorPosition.y}px, #656fe288, #00000026)`,
@@ -98,99 +122,98 @@ export const BentoCard = ({ src, title, description, isComingSoon }) => {
   );
 };
 
-const Features = () => (
-  <section className="bg-black pb-52">
-    <div className="container mx-auto px-3 md:px-10">
-      <div className="px-5 py-32">
-        <p className="font-circular-web text-lg text-blue-50">
-          Into the Abyss.
-        </p>
-        <p className="max-w-md font-circular-web text-lg text-blue-50 opacity-50">
-        Immerse yourself in the vast and ever-expanding world of Teyvat, 
-        where elemental forces and legendary adventures intertwine, 
-        shaping your journey across the land.
-        </p>
-      </div>
+const Features = () => {
+  const editVideoRef = useInViewPlayback();
 
-      <BentoTilt className="border-hsla relative mb-7 h-96 w-full overflow-hidden rounded-md md:h-[65vh]">
-        <BentoCard
-          src="videos/captain.mp4"
-          title={
-            <>
-              GE<b>N</b>SH<b>IN</b>
-            </>
-          }
-          description="A cross-platform Genshin Impact companion app, transforming your in-game and real-world activities into a rewarding adventure across Teyvat."
-          isComingSoon
-        />
-      </BentoTilt>
+  return (
+    <section id="features" className="bg-black pb-52">
+      <div className="container mx-auto px-3 md:px-10">
+        <div className="px-5 py-32">
+          <p className="font-circular-web text-lg text-blue-50">Into the Abyss.</p>
+          <p className="max-w-md font-circular-web text-lg text-blue-50 opacity-50">
+            Immerse yourself in the vast and ever-expanding world of Teyvat, where
+            elemental forces and legendary adventures intertwine, shaping your
+            journey across the land.
+          </p>
+        </div>
 
-      <div className="grid h-[135vh] w-full grid-cols-2 grid-rows-3 gap-7">
-        <BentoTilt className="bento-tilt_1 row-span-1 md:col-span-1 md:row-span-2">
+        <BentoTilt className="border-hsla relative mb-7 h-96 w-full overflow-hidden rounded-md md:h-[65vh]">
           <BentoCard
-            src="videos/furina.mp4"
+            src={asset("videos/captain")}
             title={
               <>
-                CH<b>ARA</b>C<b>T</b>ER
+                GE<b>N</b>SH<b>IN</b>
               </>
             }
-            description="The vast and diverse cast of characters, each with unique abilities and elemental affinities."
-            
+            description="A cross-platform Genshin Impact companion app, transforming your in-game and real-world activities into a rewarding adventure across Teyvat."
+            isComingSoon
           />
         </BentoTilt>
 
-        <BentoTilt className="bento-tilt_1 row-span-1 ms-32 md:col-span-1 md:ms-0">
-          <BentoCard
-            src="videos/vision.mp4"
-            title={
-              <>
-                VISI<b>ON</b>
-              </>
-            }
-            description="A Vision is a divine gem that grants elemental powers to those chosen by the Archons."
-            
-          />
-        </BentoTilt>
-        <BentoTilt className="bento-tilt_1 me-14 md:col-span-1 md:me-0 ">
-          <BentoCard className='text-black'
-            src="videos/paimon.mp4"
-            title={
+        <div className="grid w-full grid-cols-2 grid-rows-3 gap-7 md:h-[135vh]">
+          <BentoTilt className="bento-tilt_1 row-span-1 md:col-span-1 md:row-span-2">
+            <BentoCard
+              src={asset("videos/furina")}
+              title={
+                <>
+                  CH<b>ARA</b>C<b>T</b>ER
+                </>
+              }
+              description="The vast and diverse cast of characters, each with unique abilities and elemental affinities."
+            />
+          </BentoTilt>
+
+          <BentoTilt className="bento-tilt_1 row-span-1 ms-32 md:col-span-1 md:ms-0">
+            <BentoCard
+              src={asset("videos/vision")}
+              title={
+                <>
+                  VISI<b>ON</b>
+                </>
+              }
+              description="A Vision is a divine gem that grants elemental powers to those chosen by the Archons."
+            />
+          </BentoTilt>
+
+          <BentoTilt className="bento-tilt_1 me-14 md:col-span-1 md:me-0">
+            <BentoCard
+              src={asset("videos/paimon")}
+              title={
                 <span className="text-gray-50">
-                PAI<b>M</b>ON
-              </span>
-            }
-            description={
-                <span className="text-gray-50">
-                  The Traveler’s guide and companion. She is a mysterious, floating
-                  creature with a playful and sometimes mischievous personality.
+                  PAI<b>M</b>ON
                 </span>
               }
-        
-          />
-        </BentoTilt>
+              description={
+                <span className="text-gray-50">
+                  The Traveler&rsquo;s guide and companion. She is a mysterious,
+                  floating creature with a playful and sometimes mischievous
+                  personality.
+                </span>
+              }
+            />
+          </BentoTilt>
 
-        <BentoTilt className="bento-tilt_2">
-          <div className="flex size-full flex-col justify-between bg-violet-300 p-5">
-            <h1 className="bento-title special-font max-w-64 text-black">
-              M<b>o</b>re co<b>m</b>ing s<b>o</b>on.
-            </h1>
+          <BentoTilt className="bento-tilt_2">
+            <div className="flex size-full flex-col justify-between bg-violet-300 p-5">
+              <h2 className="bento-title special-font max-w-64 text-black">
+                M<b>o</b>re co<b>m</b>ing s<b>o</b>on.
+              </h2>
+              <TiLocationArrow className="m-5 scale-[5] self-end" />
+            </div>
+          </BentoTilt>
 
-            <TiLocationArrow className="m-5 scale-[5] self-end" />
-          </div>
-        </BentoTilt>
-
-        <BentoTilt className="bento-tilt_2">
-          <video
-            src="videos/edit.mp4"
-            loop
-            muted
-            autoPlay
-            className="size-full object-cover object-center"
-          />
-        </BentoTilt>
+          <BentoTilt className="bento-tilt_2">
+            <Video
+              ref={editVideoRef}
+              src={asset("videos/edit")}
+              preload="none"
+              className="size-full object-cover object-center"
+            />
+          </BentoTilt>
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default Features;

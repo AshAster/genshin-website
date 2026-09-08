@@ -2,47 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: 'General Sans', sans-serif;
     width: 100dvw;
     background-color: #dfdff0;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* The fixed navbar would otherwise cover the top of any anchored section. */
+:target {
+    scroll-margin-top: 6rem;
 }
 
 @layer base {
     @font-face {
         font-family: "genshin";
         src: url('/fonts/genshin.woff2') format('woff2');
+        font-display: swap;
     }
 
     @font-face {
         font-family: "ja-jp";
         src: url('/fonts/ja-jp.woff2') format('woff2');
+        font-display: swap;
     }
 
     @font-face {
         font-family: "circular-web";
         src: url('/fonts/circularweb-book.woff2') format('woff2');
+        font-display: swap;
     }
 
     @font-face {
         font-family: "general";
         src: url('/fonts/general.woff2') format('woff2');
+        font-display: swap;
     }
 
     @font-face {
         font-family: "robert-medium";
         src: url('/fonts/robert-medium.woff2') format('woff2');
+        font-display: swap;
     }
 
     @font-face {
         font-family: "robert-regular";
         src: url('/fonts/robert-regular.woff2') format('woff2');
+        font-display: swap;
     }
 
     @font-face {
         font-family: "zentry";
         src: url('/fonts/zentry-regular.woff2') format('woff2');
+        font-display: swap;
     }
 }
 
@@ -69,6 +86,20 @@ body {
 
     .mask-clip-path {
       clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+
+    /* Hero's hover preview. Deliberately not .mask-clip-path: the About
+       section animates that class and would drag this along with it. */
+    .hero-mini-frame {
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+
+    .skip-link {
+      @apply sr-only;
+    }
+
+    .skip-link:focus {
+      @apply not-sr-only fixed left-4 top-4 z-[200] rounded bg-black px-4 py-2 font-general text-sm uppercase text-white;
     }
 
     .special-font b {
@@ -152,7 +183,8 @@ body {
 }
 
 .indicator-line {
-    @apply h-1 w-px rounded-full bg-white transition-all duration-200 ease-in-out;
+    --animation-order: 0;
+    @apply block h-1 w-px rounded-full bg-white transition-all duration-200 ease-in-out;
 }
 
 .indicator-line.active {
@@ -272,16 +304,24 @@ body {
         opacity: 0.8;
     }
 }
-@keyframes loading-bar {
-  0% {
-    width: 0;
-    background-size: 500px 62.5px;
-  }
-  100% {
-    width: 500px;
-  }
-}
+/* Respect the OS "reduce motion" setting: strip the decorative movement but
+   keep every element visible, since several are animated in from opacity 0. */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
 
-.animate-loading-bar {
-  animation: loading-bar 3.5s cubic-bezier(0.28, 0.11, 0.32, 1) infinite forwards;
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .animated-word {
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }

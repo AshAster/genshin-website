@@ -1,10 +1,11 @@
 import { FaEnvelope, FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
+import { asset, contactEmail, hoyoverseUrl, socials } from "../config";
 
 const socialLinks = [
-  { href: "https://www.github.com", icon: <FaGithub /> },
-  { href: "https://www.linkedin.com", icon: <FaLinkedin /> },
-  { href: "mailto:ayushpandey1808@gmail.com", icon: <FaEnvelope /> },
-  { href: "https://www.twitter.com", icon: <FaTwitter /> },
+  { href: socials.github, label: "GitHub", icon: <FaGithub /> },
+  { href: socials.linkedin, label: "LinkedIn", icon: <FaLinkedin /> },
+  { href: `mailto:${contactEmail}`, label: "Email", icon: <FaEnvelope /> },
+  { href: socials.twitter, label: "Twitter", icon: <FaTwitter /> },
 ];
 
 const Footer = () => {
@@ -12,33 +13,34 @@ const Footer = () => {
     <footer className="w-screen bg-[#cdbb98] py-4 text-black">
       <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 md:flex-row">
         <p className="text-center text-sm font-light md:text-left">
-          ©AshAster 2025. All rights reserved   
+          &copy;AshAster {new Date().getFullYear()}. All rights reserved
         </p>
 
-        <div className="flex justify-center gap-4  md:justify-start">
-          {socialLinks.map((link, index) => (
-            <a
-              key={index}
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-black transition-colors duration-500 ease-in-out hover:text-white"
-            >
-              {link.icon}
-            </a>
+        <ul className="flex justify-center gap-4 md:justify-start">
+          {socialLinks.map((link) => (
+            <li key={link.label}>
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+                className="inline-flex rounded p-1 text-black outline-none transition-colors duration-500 ease-in-out hover:text-white focus-visible:ring-2 focus-visible:ring-black"
+              >
+                {link.icon}
+              </a>
+            </li>
           ))}
-        </div>
+        </ul>
 
         <a
-            href='https://www.hoyoverse.com/en-us/'
-             className="text-center font-light hover:underline md:text-right flex items-center">
-            <img
-                src="/img/hoyo.png" 
-                alt="Logo"
-                className="w-15 h-6 mr-2"
-            />
+          href={hoyoverseUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="HoYoverse"
+          className="flex items-center rounded p-1 outline-none focus-visible:ring-2 focus-visible:ring-black"
+        >
+          <img src={asset("img/hoyo.png")} alt="HoYoverse" className="h-6 w-auto" />
         </a>
-
       </div>
     </footer>
   );

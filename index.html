@@ -2,12 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+
+    <title>Teyvat — Uncover the World of Genshin Impact</title>
+    <meta
+      name="description"
+      content="An immersive fan-made tour of Teyvat: its Archons, Visions, characters and the hidden realm beneath it all."
+    />
+    <meta name="theme-color" content="#dfdff0" />
+
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <link rel="apple-touch-icon" href="/img/logo.png" />
+
+    <!-- Fonts are used above the fold, so fetch them alongside the HTML. -->
+    <link rel="preload" href="/fonts/zentry-regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/general.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/circularweb-book.woff2" as="font" type="font/woff2" crossorigin />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Teyvat — Uncover the World of Genshin Impact" />
+    <meta
+      property="og:description"
+      content="An immersive fan-made tour of Teyvat: its Archons, Visions, characters and the hidden realm beneath it all."
+    />
+    <meta property="og:image" content="/img/about.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="root"></div>
+    <noscript>This site needs JavaScript enabled to display its animations.</noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
